@@ -6,11 +6,31 @@ CREATE TABLE `Entries` (
 	`date` DATE NOT NULL,
 	FOREIGN KEY(`moodId`) REFERENCES `Moods`(`id`)
 );
+CREATE TABLE `EntryTags` (
+	`id`  INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+	`entry_id`  INTEGER NOT NULL,
+	`tag_id` INTEGER NOT NULL,
+	FOREIGN KEY(`entry_id`) REFERENCES `Entries`(`id`)
+	FOREIGN KEY(`tag_id`) REFERENCES `Tags`(`id`)
+);
 
 CREATE TABLE `Moods` (
 	`id`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	`label`	TEXT NOT NULL
 );
+CREATE TABLE `Tags` (
+	`id`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+	`name`	TEXT NOT NULL
+);
+
+INSERT INTO 'EntryTags' VALUES (null, 2, 3);
+INSERT INTO 'EntryTags' VALUES (null, 1, 1);
+INSERT INTO 'EntryTags' VALUES (null, 3, 2);
+
+INSERT INTO 'Tags' VALUES (null, 'Coding');
+INSERT INTO 'Tags' VALUES (null, 'Complaining');
+INSERT INTO 'Tags' VALUES (null, 'Emoting');
+
 
 INSERT INTO 'Entries'
 VALUES (null, 'Javascript', 'I learned about loops today. They can be a lot of fun.\nI learned about loops today. They can be a lot of fun.\nI learned about loops today. They can be a lot of fun.', 1, 'Wed Sep 15 2021 10:10:47');
