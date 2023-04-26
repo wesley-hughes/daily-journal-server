@@ -1,6 +1,6 @@
 import sqlite3
 import json
-from models import Entry, Mood
+from models import Entry, Mood, EntryTag, Tag
 
 def get_all_entries():
     """
@@ -10,16 +10,24 @@ def get_all_entries():
         conn.row_factory = sqlite3.Row
         db_cursor = conn.cursor()
         db_cursor.execute("""
-        SELECT
+        SELECT DISTINCT
             e.id,
             e.concept,
             e.entry,
             e.moodId,
             e.date,
-            m.label
+            m.label,
+            (SELECT GROUP_CONCAT(t.name)
+                FROM EntryTags et
+                JOIN Tags t on et.tag_id = t.id
+                WHERE et.entry_id = e.id) as tags
         FROM Entries e
         JOIN Moods m
-            ON m.id = e.moodId
+            on m.id = e.moodId
+        JOIN EntryTags et
+            ON et.entry_id = e.id
+        JOIN Tags t
+            ON t.id = et.tag_id;
         """)
         entries = []
         dataset = db_cursor.fetchall()
@@ -27,9 +35,14 @@ def get_all_entries():
             entry = Entry(row['id'], row['concept'], row['entry'], row['moodId'],
                     row['date'])
             mood = Mood(row['moodId'], row['label'])
+            tag_ids = row['tags'].split(",") if row["tags"] else []
+            tags = []
+            for tag in tag_ids:
+                tags.append(tag)
+            entry.tag = tags
             entry.mood = mood.__dict__
             entries.append(entry.__dict__)
-        return entries
+    return entries
 
 def get_single_entry(id):
     '''retrieve single journal entry by id'''
@@ -117,7 +130,19 @@ def create_entry(new_entry):
     """
     with sqlite3.connect("./dailyjournal.sqlite3") as conn:
         db_cursor = conn.cursor()
-
+        db_cursor.execute("""
+        SELECT
+            e.id,
+            e.concept,
+            e.entry,
+            e.moodId,
+            e.date,
+            m.label
+        FROM Entries e
+        JOIN Moods m on m.id = e.moodId
+        JOIN Tags t ON t.id = et.tag_id
+        JOIN EntryTags et on et.entry_id = e.id
+        """)
         db_cursor.execute("""
         INSERT INTO Entries
             ( concept, entry, moodId, date )
@@ -135,6 +160,12 @@ def create_entry(new_entry):
         # was sent by the client so that the client sees the
         # primary key in the response.
         new_entry['id'] = id
+        
+        for tag in new_entry["tags"]:
+            db_cursor.execute("""
+            INSERT INTO EntryTags (entry_id, tag_id)
+            VALUES (?,?);
+            """, (new_entry["id"], tag, ))
 
 
     return new_entry

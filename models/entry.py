@@ -6,3 +6,4 @@ class Entry():
         self.entry = entry
         self.moodId = moodId
         self.date = date
+

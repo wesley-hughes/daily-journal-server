@@ -3,9 +3,10 @@ CREATE TABLE `Entries` (
 	`concept`  TEXT NOT NULL,
 	`entry` TEXT NOT NULL,
 	`moodId` INTEGER NOT NULL,
-	`date` DATE NOT NULL,
+	`date` TEXT NOT NULL,
 	FOREIGN KEY(`moodId`) REFERENCES `Moods`(`id`)
 );
+
 CREATE TABLE `EntryTags` (
 	`id`  INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	`entry_id`  INTEGER NOT NULL,
@@ -23,9 +24,11 @@ CREATE TABLE `Tags` (
 	`name`	TEXT NOT NULL
 );
 
-INSERT INTO 'EntryTags' VALUES (null, 2, 3);
+INSERT INTO 'EntryTags' VALUES (null, 1, 2);
 INSERT INTO 'EntryTags' VALUES (null, 1, 1);
-INSERT INTO 'EntryTags' VALUES (null, 3, 2);
+INSERT INTO 'EntryTags' VALUES (null, 2, 2);
+INSERT INTO 'EntryTags' VALUES (null, 2, 3);
+INSERT INTO 'EntryTags' VALUES (null, 3, 1);
 
 INSERT INTO 'Tags' VALUES (null, 'Coding');
 INSERT INTO 'Tags' VALUES (null, 'Complaining');
@@ -53,3 +56,26 @@ SELECT
     e.moodId,
     e.date
 FROM Entries e;
+
+
+DROP TABLE Entries;
+DROP TABLE EntryTags;
+
+SELECT DISTINCT
+	e.id,
+	e.concept,
+	e.entry,
+	e.moodId,
+	e.date,
+	m.label,
+	(SELECT GROUP_CONCAT(t.name)
+		FROM EntryTags et
+		JOIN Tags t on et.tag_id = t.id
+		WHERE et.entry_id = e.id) as tags
+FROM Entries e
+JOIN Moods m
+	on m.id = e.moodId
+JOIN EntryTags et
+	ON et.entry_id = e.id
+JOIN Tags t
+	ON t.id = et.tag_id;
